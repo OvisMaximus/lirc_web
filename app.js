@@ -7,6 +7,7 @@ var express = require('express'),
     consolidate = require('consolidate'),
     path = require('path'),
     swig = require('swig'),
+    wpi = require('wiring-pi'),
     labels = require('./lib/labels');
 
 // Precompile templates
@@ -36,6 +37,26 @@ if (process.env.NODE_ENV == 'test' || process.env.NODE_ENV == 'development') {
     config = require(__dirname + '/test/fixtures/config.json');
 } else {
     _init();
+}
+
+wpi.setup('gpio');
+updateGpioPinStates();
+
+function updateGpioPinStates() {
+    var i, io;
+    for (i=0; i<config.gpios.length; i++) {
+        io = config.gpios[i];
+        io.state = wpi.digitalRead(io.pin);
+        console.log(JSON.stringify(io,null,4));
+    }
+}
+
+function toggleGpioPin(pin) {
+    var numericPinId = parseInt(pin);
+    var currentState = wpi.digitalRead(numericPinId);
+    var newState = currentState > 0 ? 0 : 1;
+    wpi.digitalWrite(numericPinId, newState);
+    return {"pin": pin, "state": newState};
 }
 
 function _init() {
@@ -87,6 +108,7 @@ app.get('/', function(req, res) {
         remotes: refined_remotes,
         macros: config.macros,
         repeaters: config.repeaters,
+        gpios: config.gpios,
         labelForRemote: labelFor.remote,
         labelForCommand: labelFor.command
     }));
@@ -107,6 +129,16 @@ app.get('/remotes.json', function(req, res) {
 app.get('/remotes/:remote.json', function(req, res) {
     if (lirc_node.remotes[req.params.remote]) {
         res.json(refineRemotes(lirc_node.remotes)[req.params.remote]);
+    } else {
+        res.send(404);
+    }
+});
+
+// List all gpio switches in JSON format
+app.get('/gpios.json', function(req, res) {
+    if (config.gpios) {
+        updateGpioPinStates();
+        res.json(config.gpios);
     } else {
         res.send(404);
     }
@@ -147,6 +179,15 @@ app.post('/remotes/:remote/:command/send_stop', function(req, res) {
     res.setHeader('Cache-Control', 'no-cache');
     res.send(200);
 });
+
+// toggle /gpios/:gpio_pin 
+app.post('/gpios/:gpio_pin', function(req, res) {
+    newValue = toggleGpioPin(req.params.gpio_pin);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.json(newValue);
+    res.end();
+});
+
 
 // Execute a macro (a collection of commands to one or more remotes)
 app.post('/macros/:macro', function(req, res) {
