@@ -14,11 +14,19 @@
   },
   "macros": {
     "Xbox360": [
+      [ "gpio", "TV", 1],
+      [ "gpio", "Receiver", 1],
+      [ "gpio", "Xbox", 1],
       [ "SonyTV", "Power" ],
       [ "SonyTV", "Xbox360" ],
       [ "Yamaha", "Power" ],
       [ "Yamaha", "Xbox360" ],
       [ "Xbox360", "Power" ]
+    ],
+    "all off": [
+      [ "gpio", "TV", 0],
+      [ "gpio", "Receiver", 0],
+      [ "gpio", "Xbox", 0]
     ]
   },
   "commandLabels": {
@@ -30,5 +38,14 @@
   },
   "remoteLabels": {
      "Xbox360": "Xbox 360"
-  }
+  },
+  "gpios": [
+      {"name": "Receiver",
+       "pin": 19},
+      {"name": "TV",
+       "pin": 16},
+      {"name": "Xbox",
+       "pin": 13}
+  ]
+
 }
