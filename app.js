@@ -43,20 +43,38 @@ wpi.setup('gpio');
 updateGpioPinStates();
 
 function updateGpioPinStates() {
-    var i, io;
-    for (i=0; i<config.gpios.length; i++) {
-        io = config.gpios[i];
-        io.state = wpi.digitalRead(io.pin);
-        console.log(JSON.stringify(io,null,4));
+    if (config.gpios) {
+        var i, io;
+        for (i=0; i<config.gpios.length; i++) {
+            io = config.gpios[i];
+            io.state = wpi.digitalRead(io.pin);
+        }
     }
 }
 
-function toggleGpioPin(pin) {
-    var numericPinId = parseInt(pin);
+function toggleGpioPin(pinId) {
+    var numericPinId = parseInt(pinId);
     var currentState = wpi.digitalRead(numericPinId);
     var newState = currentState > 0 ? 0 : 1;
     wpi.digitalWrite(numericPinId, newState);
-    return {"pin": pin, "state": newState};
+    return {"pin": pinId, "state": newState};
+}
+
+function getGpioPinIdByName(pinName) {
+    function findElement(array, propertyName, propertyValue) {
+        for (var i=0; i<array.length; i++) {
+            if(array[i][propertyName] == propertyValue) {
+                return array[i];
+            }
+        }
+    }
+    gpioPin = findElement(config.gpios, "name", pinName);
+    return gpioPin.pin;
+}
+
+function setGpio(pinName, newState){
+    numericPinId = getGpioPinIdByName(pinName);
+    wpi.digitalWrite(numericPinId, newState);
 }
 
 function _init() {
@@ -135,14 +153,16 @@ app.get('/remotes/:remote.json', function(req, res) {
 });
 
 // List all gpio switches in JSON format
-app.get('/gpios.json', function(req, res) {
+app.get('/gpios.json', function(req, res) {respondWithGpioState(res)});
+
+function respondWithGpioState(res) {
     if (config.gpios) {
         updateGpioPinStates();
         res.json(config.gpios);
     } else {
         res.send(404);
     }
-});
+}
 
 // List all macros in JSON format
 app.get('/macros.json', function(req, res) {
@@ -157,7 +177,6 @@ app.get('/macros/:macro.json', function(req, res) {
         res.send(404);
     }
 });
-
 
 // Send :remote/:command one time
 app.post('/remotes/:remote/:command', function(req, res) {
@@ -207,6 +226,9 @@ app.post('/macros/:macro', function(req, res) {
 
             if (command[0] == "delay") {
                 setTimeout(nextCommand, command[1]);
+            } else if (command[0] == "gpio") {
+                setGpio(command[1], command[2]);
+                nextCommand();
             } else {
                 // By default, wait 100msec before calling next command
                 lirc_node.irsend.send_once(command[0], command[1], function() { setTimeout(nextCommand, 100); });
@@ -218,7 +240,11 @@ app.post('/macros/:macro', function(req, res) {
     }
 
     res.setHeader('Cache-Control', 'no-cache');
-    res.send(200);
+    if(config.gpios) {
+        respondWithGpioState(res);
+    } else {
+        res.send(200);
+    }
 });
 
 // Listen (http)

@@ -62,7 +62,7 @@ $(function() {
         $.ajax({
             type: "POST",
             url: $(this).attr('href'),
-            success: function(data) {},
+            success: function(data) { initializeSwitchStates(data); },
             error: function(xhr, type) {}
         });
     });
