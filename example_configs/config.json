@@ -39,13 +39,18 @@
   "remoteLabels": {
      "Xbox360": "Xbox 360"
   },
+  "blacklists": {
+     "Yamaha": [
+       "AUX2",
+       "AUX3"
+     ]
+  },
   "gpios": [
-      {"name": "Receiver",
-       "pin": 19},
-      {"name": "TV",
-       "pin": 16},
-      {"name": "Xbox",
-       "pin": 13}
+    {"name": "Receiver",
+     "pin": 19},
+    {"name": "TV",
+     "pin": 16},
+    {"name": "Xbox",
+     "pin": 13}
   ]
-
 }
