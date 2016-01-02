@@ -15,7 +15,7 @@ You'll need to have [LIRC](http://lirc.org) installed and configured on your mac
     npm install -g lirc_web
     lirc_web
 
-Note that you may need to run the `npm install -g` command with `sudo`.
+Note that you probably have to run the `npm install -g` command with `sudo`.
 
 ### Viewing
 
@@ -129,6 +129,7 @@ Install GruntJS (build environment):
     npm install -g grunt-init
     grunt server
 
+Note that you probably have to run the `npm install -g` command with `sudo`.
 
 **You may need to reload your shell before continuing so the Grunt binares are detected.**
 
