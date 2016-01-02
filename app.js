@@ -142,7 +142,7 @@ var labelFor = labels(config.remoteLabels, config.commandLabels)
 
 // Web UI
 app.get('/', function(req, res) {
-  var refined_remotes = refineRemotes(lirc_node.remotes);
+  var refined_remotes = refineRemotes(lircNode.remotes);
   res.send(JST.index.render({
     remotes: refined_remotes,
     macros: config.macros,
