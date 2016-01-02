@@ -8,7 +8,7 @@ var swig = require('swig');
 var labels = require('./lib/labels');
 var https = require('https');
 var fs = require('fs');
-var wpi = require('wiring-pi'),
+var wpi = require('wiring-pi');
 
 // Precompile templates
 var JST = {
