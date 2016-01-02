@@ -15,7 +15,7 @@ You'll need to have [LIRC](http://lirc.org) installed and configured on your mac
     npm install -g lirc_web
     lirc_web
 
-Note that you may need to run the `npm install` command with `sudo`.
+Note that you may need to run the `npm install -g` command with `sudo`.
 
 ### Viewing
 
