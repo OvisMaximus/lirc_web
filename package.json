@@ -8,7 +8,8 @@
     "express": "3.0.6",
     "lirc_node": "0.0.4",
     "swig": "0.13.5",
-    "consolidate": "0.11.0"
+    "consolidate": "0.11.0",
+    "wiring-pi": "2.1.0"
   },
   "devDependencies": {
     "eslint": "1.10.0",
