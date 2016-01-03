@@ -8,7 +8,7 @@ var swig = require('swig');
 var labels = require('./lib/labels');
 var https = require('https');
 var fs = require('fs');
-var wpi = require('wiring-pi');
+var gpio = require('./lib/gpio');
 
 // Precompile templates
 var JST = {
@@ -40,44 +40,6 @@ app.configure(function () {
   app.use(express.compress());
   app.use(express.static(__dirname + '/static'));
 });
-
-wpi.setup('gpio');
-updateGpioPinStates();
-
-function updateGpioPinStates() {
-    if (config.gpios) {
-        var i, io;
-        for (i=0; i<config.gpios.length; i++) {
-            io = config.gpios[i];
-            io.state = wpi.digitalRead(io.pin);
-        }
-    }
-}
-
-function toggleGpioPin(pinId) {
-    var numericPinId = parseInt(pinId);
-    var currentState = wpi.digitalRead(numericPinId);
-    var newState = currentState > 0 ? 0 : 1;
-    wpi.digitalWrite(numericPinId, newState);
-    return {"pin": pinId, "state": newState};
-}
-
-function getGpioPinIdByName(pinName) {
-    function findElement(array, propertyName, propertyValue) {
-        for (var i=0; i<array.length; i++) {
-            if(array[i][propertyName] == propertyValue) {
-                return array[i];
-            }
-        }
-    }
-    gpioPin = findElement(config.gpios, "name", pinName);
-    return gpioPin.pin;
-}
-
-function setGpio(pinName, newState){
-    numericPinId = getGpioPinIdByName(pinName);
-    wpi.digitalWrite(numericPinId, newState);
-}
 
 function _init() {
   var home = process.env.HOME;
@@ -137,19 +99,16 @@ if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
   _init();
 }
 
-// Routes
-var labelFor = labels(config.remoteLabels, config.commandLabels)
-
 // Web UI
-app.get('/', function(req, res) {
-  var refined_remotes = refineRemotes(lircNode.remotes);
+app.get('/', function (req, res) {
+  var refinedRemotes = refineRemotes(lircNode.remotes);
   res.send(JST.index.render({
-    remotes: refined_remotes,
+    remotes: refinedRemotes,
     macros: config.macros,
     repeaters: config.repeaters,
     gpios: config.gpios,
     labelForRemote: labelFor.remote,
-    labelForCommand: labelFor.command
+    labelForCommand: labelFor.command,
   }));
 });
 
@@ -173,17 +132,19 @@ app.get('/remotes/:remote.json', function (req, res) {
   }
 });
 
-// List all gpio switches in JSON format
-app.get('/gpios.json', function(req, res) {respondWithGpioState(res)});
-
 function respondWithGpioState(res) {
-    if (config.gpios) {
-        updateGpioPinStates();
-        res.json(config.gpios);
-    } else {
-        res.send(404);
-    }
+  if (config.gpios) {
+    gpio.updatePinStates();
+    res.json(config.gpios);
+  } else {
+    res.send(404);
+  }
 }
+
+// List all gpio switches in JSON format
+app.get('/gpios.json', function (req, res) {
+  respondWithGpioState(res);
+});
 
 // List all macros in JSON format
 app.get('/macros.json', function (req, res) {
@@ -220,12 +181,12 @@ app.post('/remotes/:remote/:command/send_stop', function (req, res) {
   res.send(200);
 });
 
-// toggle /gpios/:gpio_pin 
-app.post('/gpios/:gpio_pin', function(req, res) {
-    newValue = toggleGpioPin(req.params.gpio_pin);
-    res.setHeader('Cache-Control', 'no-cache');
-    res.json(newValue);
-    res.end();
+// toggle /gpios/:gpio_pin
+app.post('/gpios/:gpio_pin', function (req, res) {
+  var newValue = gpio.togglePin(req.params.gpio_pin);
+  res.setHeader('Cache-Control', 'no-cache');
+  res.json(newValue);
+  res.end();
 });
 
 
@@ -247,8 +208,8 @@ app.post('/macros/:macro', function (req, res) {
 
       if (command[0] === 'delay') {
         setTimeout(nextCommand, command[1]);
-      } else if (command[0] == "gpio") {
-        setGpio(command[1], command[2]);
+      } else if (command[0] === 'gpio') {
+        gpio.setPin(command[1], command[2]);
         nextCommand();
       } else {
         // By default, wait 100msec before calling next command
@@ -261,12 +222,14 @@ app.post('/macros/:macro', function (req, res) {
   }
 
   res.setHeader('Cache-Control', 'no-cache');
-  if(config.gpios) {
+  if (config.gpios) {
     respondWithGpioState(res);
   } else {
     res.send(200);
   }
 });
+
+gpio.init(config.gpios);
 
 // Listen (http)
 if (config.server && config.server.port) {
