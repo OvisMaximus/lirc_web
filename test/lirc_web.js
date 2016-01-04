@@ -3,7 +3,8 @@ var app = require('../app'),
     request = require('supertest'),
     sinon = require('sinon');
 jsdom = require("jsdom");
-
+var fs = require('fs');
+var jquery = fs.readFileSync('test/jquery.js','utf-8');
 
 describe('lirc_web', function() {
 
@@ -70,10 +71,13 @@ describe('lirc_web', function() {
             request(app).get('/').end(function(err, res) {
                 error = err;
                 response = res;
-                // TODO: Remove external dependency so offline development and testing is possible
-                jsdom.env(response.text, ["http://code.jquery.com/jquery.js"], function (errors, window) {
-                    $ = window.$;
-                    done();
+                jsdom.env({
+                    html: response.text,
+                    src: [jquery],
+                    done: function (errors, window) {
+                        $ = window.$;
+                        done();
+                    },
                 });
             });
         });
