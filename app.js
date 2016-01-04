@@ -28,9 +28,6 @@ var sslOptions = {
   cert: null,
 };
 
-// Labels for remotes / commands
-var labelFor = labels(config.remoteLabels, config.commandLabels);
-
 // App configuration
 app.engine('.html', consolidate.swig);
 app.configure(function () {
@@ -99,7 +96,12 @@ if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
   _init();
 }
 
-// Web UI
+// Labels for remotes / commands
+var labelFor = labels(config.remoteLabels, config.commandLabels);
+
+// Routes
+
+// Index
 app.get('/', function (req, res) {
   var refinedRemotes = refineRemotes(lircNode.remotes);
   res.send(JST.index.render({
