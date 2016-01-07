@@ -2,7 +2,7 @@ var gpio = require('../../lib/gpio');
 var assert = require('assert');
 //var sinon = require('sinon');
 
-var wpi = {
+var gpioProbe = {
   data : new Array(50),
   schema : null,
   digitalRead: function (pin) {
@@ -15,6 +15,11 @@ var wpi = {
   setup: function (schema) {
     this.schema = schema;
   },
+  initPinsWith: function (value) {
+    for (var i = 0; i < this.data.length; i++ ){
+      this.data[i] = value;
+    };
+  },
 };
 
 var config = [ 
@@ -23,26 +28,21 @@ var config = [
 
 var realWpi = null;
 
-function initWpiPinsWith(value) {
-  for (var i = 0; i < wpi.data.length; i++ ){
-    wpi.data[i] = value;
-  };
-}
 
 describe('gpio', function() {
   before( function() {
-    initWpiPinsWith(0);
-    realWpi = gpio.overrideWirePi(wpi);
+    gpioProbe.initPinsWith(0);
+    realWpi = gpio.overrideWiringPi(gpioProbe);
     gpio.init(config);
   });
 
   after( function() {
-    gpio.overrideWirePi(realWpi);
+    gpio.overrideWiringPi(realWpi);
   });
 
   describe('updatePinStates', function() {
     it('should update all pin states', function() {
-      initWpiPinsWith(1);
+      gpioProbe.initPinsWith(1);
       gpio.updatePinStates();
       assert.deepEqual(
         config,
@@ -54,7 +54,7 @@ describe('gpio', function() {
 
   describe('togglePin', function () {
     it('should change active pin to inactive', function() {
-      initWpiPinsWith(1);
+      gpioProbe.initPinsWith(1);
       var res = gpio.togglePin(47);
       assert.deepEqual(
         res,
@@ -63,7 +63,7 @@ describe('gpio', function() {
     });
 
     it('should change inactive pin to active', function() {
-      initWpiPinsWith(0);
+      gpioProbe.initPinsWith(0);
       var res = gpio.togglePin(47);
       assert.deepEqual(
         res,
@@ -74,19 +74,19 @@ describe('gpio', function() {
 
   describe('setPin', function () {
     it('should set a pin by name to the given value', function() {
-      initWpiPinsWith(0);
+      gpioProbe.initPinsWith(0);
       gpio.setPin('a', 1);
-      assert.equal(wpi.data[47], 1);
+      assert.equal(gpioProbe.data[47], 1);
       gpio.setPin('a', 1);
-      assert.equal(wpi.data[47], 1);
+      assert.equal(gpioProbe.data[47], 1);
       gpio.setPin('a', 0);
-      assert.equal(wpi.data[47], 0);
+      assert.equal(gpioProbe.data[47], 0);
     });
   });
 
   describe('init', function () {
     it('should initialize the wiring_pi library to use gpio address schema', function() {
-      assert.equal(wpi.schema, 'gpio');
+      assert.equal(gpioProbe.schema, 'gpio');
     });
   });
 });
