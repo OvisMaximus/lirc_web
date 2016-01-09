@@ -5,16 +5,15 @@ var app = require('../app'),
 jsdom = require("jsdom");
 var fs = require('fs');
 var jquery = fs.readFileSync('test/jquery.js','utf-8');
+var configFixture = require(__dirname + '/fixtures/config.json');
 
 describe('lirc_web', function() {
-
     describe('routes', function() {
 
         // Root route
         it('should have an index route "/"', function(done) {
             assert(request(app).get('/').expect(200, done));
         });
-
 
         // JSON API
         it('should have GET route for JSON list of macros', function(done) {
@@ -94,6 +93,15 @@ describe('lirc_web', function() {
                 assert.equal(4, s.length);
                 assert.equal("", s[0]);
                 assert.equal("remotes", s[1]);
+            });
+        });
+
+        it('should contain all gpio buttons', function() {
+            var gpioButtons = $('button.gpio-link');
+            assert.equal(gpioButtons.length, configFixture.gpios.length);
+            gpioButtons.each(function(idx, elem) {
+                var pin = $(elem).attr('pin');
+                assert.equal( pin, configFixture.gpios[idx].pin );
             });
         });
 
