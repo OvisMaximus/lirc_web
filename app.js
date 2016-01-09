@@ -2,6 +2,8 @@
 
 // Requirements
 var express = require('express');
+var logger = require('morgan')
+var compress = require('compression')
 var lircNode = require('lirc_node');
 var consolidate = require('consolidate');
 var swig = require('swig');
@@ -30,13 +32,11 @@ var sslOptions = {
 
 // App configuration
 app.engine('.html', consolidate.swig);
-app.configure(function () {
-  app.use(express.logger());
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'jade');
-  app.use(express.compress());
-  app.use(express.static(__dirname + '/static'));
-});
+app.use(logger('combined'));
+app.set('views', __dirname + '/views');
+app.set('view engine', 'jade');
+app.use(compress());
+app.use(express.static(__dirname + '/static'));
 
 function _init() {
   var home = process.env.HOME;
@@ -104,7 +104,7 @@ var labelFor = labels(config.remoteLabels, config.commandLabels);
 // Index
 app.get('/', function (req, res) {
   var refinedRemotes = refineRemotes(lircNode.remotes);
-  res.send(JST.index.render({
+  res.send(JST.index({
     remotes: refinedRemotes,
     macros: config.macros,
     repeaters: config.repeaters,
@@ -130,7 +130,7 @@ app.get('/remotes/:remote.json', function (req, res) {
   if (lircNode.remotes[req.params.remote]) {
     res.json(refineRemotes(lircNode.remotes)[req.params.remote]);
   } else {
-    res.send(404);
+    res.sendStatus(404);
   }
 });
 
@@ -158,7 +158,7 @@ app.get('/macros/:macro.json', function (req, res) {
   if (config.macros && config.macros[req.params.macro]) {
     res.json(config.macros[req.params.macro]);
   } else {
-    res.send(404);
+    res.sendStatus(404);
   }
 });
 
@@ -166,21 +166,21 @@ app.get('/macros/:macro.json', function (req, res) {
 app.post('/remotes/:remote/:command', function (req, res) {
   lircNode.irsend.send_once(req.params.remote, req.params.command, function () {});
   res.setHeader('Cache-Control', 'no-cache');
-  res.send(200);
+  res.sendStatus(200);
 });
 
 // Start sending :remote/:command repeatedly
 app.post('/remotes/:remote/:command/send_start', function (req, res) {
   lircNode.irsend.send_start(req.params.remote, req.params.command, function () {});
   res.setHeader('Cache-Control', 'no-cache');
-  res.send(200);
+  res.sendStatus(200);
 });
 
 // Stop sending :remote/:command repeatedly
 app.post('/remotes/:remote/:command/send_stop', function (req, res) {
   lircNode.irsend.send_stop(req.params.remote, req.params.command, function () {});
   res.setHeader('Cache-Control', 'no-cache');
-  res.send(200);
+  res.sendStatus(200);
 });
 
 // toggle /gpios/:gpio_pin
@@ -227,7 +227,7 @@ app.post('/macros/:macro', function (req, res) {
   if (config.gpios) {
     respondWithGpioState(res);
   } else {
-    res.send(200);
+    res.sendStatus(200);
   }
 });
 
