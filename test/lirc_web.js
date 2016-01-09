@@ -6,6 +6,7 @@ jsdom = require("jsdom");
 var fs = require('fs');
 var jquery = fs.readFileSync('test/jquery.js','utf-8');
 var configFixture = require(__dirname + '/fixtures/config.json');
+var gpioMock = require('./lib/wiring-pi-mock');
 
 describe('lirc_web', function() {
     describe('routes', function() {
@@ -30,6 +31,10 @@ describe('lirc_web', function() {
 
         it('should have GET route for JSON list of commands for macro', function(done) {
             assert(request(app).get('/macros/Play%20Xbox%20360.json').expect(200, done));
+        });
+
+        it('should have GET route for JSON list of gpio pins', function(done) {
+            assert(request(app).get('/gpios.json').expect(200, done));
         });
 
         it ('should properly handle macros with / in them', function(done) {
@@ -58,6 +63,22 @@ describe('lirc_web', function() {
         // Sending macros
         it('should have POST route for sending a macro', function(done) {
             assert(request(app).post('/macros/xbox_360').expect(200, done));
+        });
+
+        // Sending GPIO change requests
+        it('should have POST route for gpio toggle', function(done) {
+            var before = 0;
+            gpioMock.initPinsWith(before);
+            request(app)
+            .post('/gpios/26')
+            .set('Accept', 'application/json')
+            .expect(200, function(err, result) {
+                assert.equal(gpioMock.emulatedPins[26], 1, 'pin state has been changed');
+                pinDescription = JSON.parse(result.text);
+                assert(pinDescription.pin, 26, 'response contains requested pin number');
+                assert(pinDescription.state, 1, 'response contains requested pin state');
+                done();
+            });
         });
 
     });
@@ -142,6 +163,8 @@ describe('lirc_web', function() {
             .set('Accept', 'application/json')
             .expect(200, XBOX_COMMANDS, done)
         });
+
+
 
         it('should return a filtered list of commands when a blacklist exists', function(done) {
             request(app)
