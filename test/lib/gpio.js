@@ -3,21 +3,21 @@ var assert = require('assert');
 //var sinon = require('sinon');
 
 var gpioProbe = {
-  data : new Array(50),
+  emulatedPins : new Array(50),
   schema : null,
   digitalRead: function (pin) {
-    return this.data[pin];
+    return this.emulatedPins[pin];
   },
   digitalWrite: function (pin, state){ 
-    this.data[pin] = state;
-    return this.data[pin];
+    this.emulatedPins[pin] = state;
+    return this.emulatedPins[pin];
   },
   setup: function (schema) {
     this.schema = schema;
   },
   initPinsWith: function (value) {
-    for (var i = 0; i < this.data.length; i++ ){
-      this.data[i] = value;
+    for (var i = 0; i < this.emulatedPins.length; i++ ){
+      this.emulatedPins[i] = value;
     };
   },
 };
@@ -76,11 +76,11 @@ describe('gpio', function() {
     it('should set a pin by name to the given value', function() {
       gpioProbe.initPinsWith(0);
       gpio.setPin('a', 1);
-      assert.equal(gpioProbe.data[47], 1);
+      assert.equal(gpioProbe.emulatedPins[47], 1);
       gpio.setPin('a', 1);
-      assert.equal(gpioProbe.data[47], 1);
+      assert.equal(gpioProbe.emulatedPins[47], 1);
       gpio.setPin('a', 0);
-      assert.equal(gpioProbe.data[47], 0);
+      assert.equal(gpioProbe.emulatedPins[47], 0);
     });
   });
 
