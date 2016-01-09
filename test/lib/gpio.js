@@ -2,31 +2,11 @@ var gpio = require('../../lib/gpio');
 var assert = require('assert');
 //var sinon = require('sinon');
 
-var gpioProbe = {
-  emulatedPins : new Array(50),
-  schema : null,
-  digitalRead: function (pin) {
-    return this.emulatedPins[pin];
-  },
-  digitalWrite: function (pin, state){ 
-    this.emulatedPins[pin] = state;
-    return this.emulatedPins[pin];
-  },
-  setup: function (schema) {
-    this.schema = schema;
-  },
-  initPinsWith: function (value) {
-    for (var i = 0; i < this.emulatedPins.length; i++ ){
-      this.emulatedPins[i] = value;
-    };
-  },
-};
-
+var gpioProbe = require('./wiring-pi-mock.js'); 
 var config = [ 
   {'name': 'a', 'pin': 47, 'state': 0},
   {'name': 'b', 'pin': 11, 'state': 0} ];
 
-var realWpi = null;
 
 
 describe('gpio', function() {

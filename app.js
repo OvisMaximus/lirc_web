@@ -92,6 +92,7 @@ function refineRemotes(myRemotes) {
 if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
   lircNode.remotes = require(__dirname + '/test/fixtures/remotes.json');
   config = require(__dirname + '/test/fixtures/config.json');
+  gpio.overrideWiringPi(require('./test/lib/wiring-pi-mock'));
 } else {
   _init();
 }
