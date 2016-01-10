@@ -49,6 +49,59 @@ var CONFIG_HELLO = [
   },
 ];
 
+var CONFIG_DELEGATE = [
+  {
+    'name': 'exclamationmark',
+    'hidden': true,
+    'sequence': [
+      ['say', '!'],
+    ],
+  }, {
+    'name': 'world',
+    'hidden': true,
+    'sequence': [
+      ['say', 'world'],
+      ['call', 'exclamationmark'],
+    ],
+  }, {
+    'name': 'hello',
+    'hidden': false,
+    'sequence': [
+      ['say', 'hello'],
+      ['call', 'world'],
+    ],
+  },
+];
+
+var CONFIG_MULTI_DELEGATE = [
+  {
+    'name': 'hello',
+    'hidden': true,
+    'sequence': [
+      ['say', 'hello'],
+    ],
+  }, {
+    'name': 'world',
+    'hidden': true,
+    'sequence': [
+      ['say', 'world'],
+    ],
+  }, {
+    'name': 'exclamationmark',
+    'hidden': true,
+    'sequence': [
+      ['say', '!'],
+    ],
+  }, {
+    'name': 'hello world',
+    'sequence': [
+      ['call', 'hello'],
+      ['call', 'world'],
+      ['call', 'exclamationmark'],
+    ],
+  },
+
+];
 
 var CONFIG_UNKNOWN_DEVICE = [{
   'name': 'dont care',
@@ -97,11 +150,21 @@ describe('macros', function () {
       deviceMock.operations = [];
       macros.resetConfiguration();
       macros.registerDevice('say', deviceMock);
-      macros.init(CONFIG_HELLO_WORLD);
     });
     it('should accept a macro name for execution', function () {
+      macros.init(CONFIG_HELLO_WORLD);
       macros.execute('hello world');
       assert.deepEqual(deviceMock.operations, [['hello'], ['world']]);
+    });
+    it('should call other macros', function () {
+      macros.init(CONFIG_DELEGATE);
+      macros.execute('hello');
+      assert.deepEqual(deviceMock.operations, [['hello'], ['world'], ['!']]);
+    });
+    it('should call other macros', function () {
+      macros.init(CONFIG_MULTI_DELEGATE);
+      macros.execute('hello world');
+      assert.deepEqual(deviceMock.operations, [['hello'], ['world'], ['!']]);
     });
   });
 
